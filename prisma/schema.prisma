@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  role      String   @default("User") // User | PluginMaker | Developer | Admin
+  hwid      String?
+  lastIp    String?
+  isBanned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  licenses  License[]
+  plugins   Plugin[]
+}
+
+model License {
+  id          String    @id @default(cuid())
+  name        String
+  key         String    @unique
+  expiration  DateTime?
+  minecraftIp String
+  oneTimeUse  Boolean   @default(false)
+  used        Boolean   @default(false)
+  hwid        String?
+  userId      String?
+  pluginId    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user   User?   @relation(fields: [userId], references: [id])
+  plugin Plugin? @relation(fields: [pluginId], references: [id])
+}
+
+model Plugin {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  version       String
+  price         Float    @default(0)
+  isFree        Boolean  @default(false)
+  downloadCount Int      @default(0)
+  status        String   @default("Pending") // Pending | Approved | Rejected
+  creatorId     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  creator  User      @relation(fields: [creatorId], references: [id])
+  licenses License[]
+}
+
+model Server {
+  id         String   @id @default(cuid())
+  name       String
+  status     String   @default("Online")
+  players    Int      @default(0)
+  maxPlayers Int      @default(100)
+  version    String
+  ip         String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  createdAt DateTime @default(now())
+}
